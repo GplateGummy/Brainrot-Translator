@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainrot to Normal Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4285f4;
+            margin-right: 10px;
+        }
+
+        .translate-container {
+            display: flex;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+
+        .language-section {
+            flex: 1;
+            padding: 15px;
+            position: relative;
+        }
+
+        .language-header {
+            font-size: 16px;
+            color: #5f6368;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            border: none;
+            resize: none;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .divider {
+            width: 1px;
+            background-color: #ddd;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2b76e5;
+        }
+
+        .copy-button {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            background-color: transparent;
+            color: #5f6368;
+            padding: 5px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .copy-button:hover {
+            background-color: #f1f1f1;
+        }
+
+        .note {
+            margin-top: 10px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #5f6368;
+            font-size: 14px;
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 10px 0;
+            background-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">Brainrot Translator</div>
+    </div>
+
+    <div class="translate-container">
+        <div class="language-section">
+            <div class="language-header">Brainrot</div>
+            <textarea id="input-text" placeholder="Enter text to translate"></textarea>
+            <button class="copy-button" onclick="copyText('input-text')">Copy</button>
+        </div>
+        <div class="divider"></div>
+        <div class="language-section">
+            <div class="language-header">Normal</div>
+            <textarea id="output-text" readonly placeholder="Translation will appear here"></textarea>
+            <button class="copy-button" onclick="copyText('output-text')">Copy</button>
+        </div>
+    </div>
+
+    <button onclick="translateText()">Translate</button>
+    <div class="note">Recommended not to put in goon, gooner or gooning if you are family-friendly.</div>
+
+    <script>
+        const translations = {
+            "aura": "intelligence",
+            "baddie": "attractive person",
+            "based": "awesome",
+            "bae": "sweetheart",
+            "blud": "buddy",
+            "bop": "hit song",
+            "bro": "buddy",
+            "bruh": "buddy",
+            "bussin": "excellent",
+            "bussin'": "excellent",
+            "bussing": "excellent",
+            "cap": "lie",
+            "caping": "lying",
+            "capped": "lied",
+            "caught in 4k": "caught undeniably",
+            "cringe": "embarrassing",
+            "cringy": "embarrassing",
+            "dang": "darn",
+            "doomscrolling": "browsing negativity endlessly",
+            "drip": "style",
+            "drippy": "stylish",
+            "dripy": "stylish",
+            "f": "respect",
+            "fanum tax": "food theft",
+            "fanum taxed": "stolen",
+            "fella": "buddy",
+            "fr": "truly",
+            "frfr": "absolutely",
+            "glaze": "overpraise",
+            "glazed": "overpraised",
+            "glazing": "overpraising",
+            "glow down": "deteriorated",
+            "glow up": "improved",
+            "glow_down": "deteriorated",
+            "glow_up": "improved",
+            "glowdown": "deteriorated",
+            "glowup": "improved",
+            "goon": "masturbate",
+            "gooning": "masturbating",
+            "gooner": "masturbater",
+            "gooned": "masturbated",
+            "goat": "greatest of all time",
+            "goated": "the greatest of all time",
+            "gyat": "impressive",
+            "gyatt": "impressive",
+            "iykyk": "insiders understand",
+            "l": "failure",
+            "lit": "exciting",
+            "looks maxing": "appearance enhancing",
+            "looks maxxing": "appearance enhancing",
+            "looksmaxing": "appearance enhancing",
+            "looksmaxxing": "appearance enhancing",
+            "low key": "subtly",
+            "low_key": "subtly",
+            "lowkey": "subtly",
+            "mewing": "jawline training",
+            "mid": "mediocre",
+            "mog": "outshine",
+            "mogged": "outshined",
+            "mogger": "superior person",
+            "mogging": "outshining",
+            "moging": "outshining",
+            "newb": "beginner",
+            "newbie": "beginner",
+            "newgen": "newcomer",
+            "no cap": "honestly",
+            "noob": "beginner",
+            "noobie": "beginner",
+            "npc": "predictable person",
+            "og": "original",
+            "ong": "truthfully",
+            "only in ohio": "bizarre",
+            "peak": "on top",
+            "ratio": "outnumbered",
+            "ratioed": "outnumbered",
+            "rizz": "charm",
+            "rizzed": "charmed",
+            "rizzing": "charming",
+            "rizzler": "charmer",
+            "sassy": "audacious",
+            "sheesh": "wow",
+            "shlawg": "disapprove",
+            "side-eye": "skepticism",
+            "sideeye": "skepticism",
+            "simp": "fawning over someone",
+            "simped": "fawned over someone",
+            "simping": "fawning over someone",
+            "skibidi": "strange",
+            "skbidi": "strange",
+            "skibidi toilet": "bizarre person",
+            "slay": "excel",
+            "slayed": "excelled",
+            "slaying": "excelling",
+            "smh": "disappointingly",
+            "spiraling": "deteriorating emotionally",
+            "sus": "suspicious",
+            "sussy": "suspicious",
+            "uwu": "adorable",
+            "valid": "acceptable",
+            "vibe check": "personality assessment",
+            "vibing": "enjoying myself",
+            "w": "success",
+            "woke": "socially aware",
+            "yall": "everyone",
+            "y'all": "everyone",
+            "yass": "yes",
+            "yeet": "throw",
+            "yeeted": "threw",
+            "yeeting": "throwing",
+            "zang": "darn",
+            "zesty": "eccentric",
+        };
+
+        const specialCases = {
+            "what the sigma": "what the heck",
+            "it hits different": "it feels unique",
+            "touch grass": "go outside",
+            "i can't even": "i'm overwhelmed",
+            "is giving": "resembles",
+            "rent free": "constantly remembered",
+            "i'm dead": "i'm laughing hard",
+            "main character energy": "self-importance",
+            "understood the assignment": "performed perfectly",
+            "living my best life": "thriving",
+            "on fleek": "perfect",
+            "spill the tea": "share gossip",
+            "big yikes": "very embarrassing",
+            "based": "respectable",
+            "not based": "disagreeable",
+            "say less": "understood completely",
+            "no thoughts head empty": "mentally blank",
+            "caught lacking": "found unprepared",
+            "down bad": "desperate",
+            "out of pocket": "inappropriate",
+            "goon off": "jerk off",
+            "gooned off": "jerked off",
+            "gooning off": "jerking off"
+        };
+
+        function translateText() {
+            const inputText = document.getElementById('input-text').value;
+            let outputText = inputText;
+
+            for (const [phrase, translation] of Object.entries(specialCases)) {
+                const regex = new RegExp('\\b' + phrase + '\\b', 'gi');
+                outputText = outputText.replace(regex, function (match) {
+                    return matchCase(match, translation);
+                });
+            }
+
+            for (const [word, translation] of Object.entries(translations)) {
+                const regex = new RegExp('\\b' + word + '\\b', 'gi');
+                outputText = outputText.replace(regex, function (match) {
+                    return matchCase(match, translation);
+                });
+            }
+
+            document.getElementById('output-text').value = outputText;
+        }
+
+        function matchCase(original, replacement) {
+            if (original === original.toUpperCase()) {
+                return replacement.toUpperCase();
+            }
+
+            if (original === original.toLowerCase()) {
+                return replacement.toLowerCase();
+            }
+
+            if (original[0] === original[0].toUpperCase() && original.slice(1) === original.slice(1).toLowerCase()) {
+                return replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
+            }
+
+            if (original.slice(0, -1) === original.slice(0, -1).toLowerCase() && original[original.length - 1] === original[original.length - 1].toUpperCase()) {
+                return replacement.slice(0, -1).toLowerCase() + replacement.charAt(replacement.length - 1).toUpperCase();
+            }
+
+            if (original.includes(' ') && replacement.includes(' ')) {
+                return matchCaseMultiWord(original, replacement);
+            }
+
+            return replacement;
+        }
+
+        function matchCaseMultiWord(original, replacement) {
+            const originalWords = original.split(' ');
+            const replacementWords = replacement.split(' ');
+
+            for (let i = 0; i < Math.min(originalWords.length, replacementWords.length); i++) {
+                replacementWords[i] = matchCase(originalWords[i], replacementWords[i]);
+            }
+
+            return replacementWords.join(' ');
+        }
+
+        function copyText(elementId) {
+            const textElement = document.getElementById(elementId);
+            textElement.select();
+            document.execCommand('copy');
+            alert('Text copied to clipboard!');
+        }
+    </script>
+
+    <div class="footer">
+        Made by @GplateGam on Discord
+    </div>
+</body>
+
+</html>
