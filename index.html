@@ -147,7 +147,6 @@
             "bro": "buddy",
             "bruh": "buddy",
             "bussin": "excellent",
-            "bussin'": "excellent",
             "bussing": "excellent",
             "cap": "lie",
             "caping": "lying",
@@ -166,6 +165,7 @@
             "fella": "buddy",
             "fr": "truly",
             "frfr": "absolutely",
+            "gay": "transgender",
             "glaze": "overpraise",
             "glazed": "overpraised",
             "glazing": "overpraising",
@@ -244,7 +244,6 @@
             "w": "success",
             "woke": "socially aware",
             "yall": "everyone",
-            "y'all": "everyone",
             "yass": "yes",
             "yeet": "throw",
             "yeeted": "threw",
@@ -256,16 +255,16 @@
             "pmo": "puts me on",
             "sybau": "shut up"
         };
+        
+        const noSymbolTransferWords = [
+            "yall"
+        ];
 
         const specialCases = {
             "what the sigma": "what the heck",
-            "it hits different": "it feels unique",
             "touch grass": "go outside",
-            "i can't even": "i'm overwhelmed",
             "is giving": "resembles",
             "rent free": "constantly remembered",
-            "i'm dead": "i'm laughing hard",
-            "me dying": "me laughing hard",
             "main character energy": "self-importance",
             "understood the assignment": "performed perfectly",
             "living my best life": "thriving",
@@ -281,28 +280,124 @@
             "out of pocket": "inappropriate",
             "goon off": "jerk off",
             "gooned off": "jerked off",
-            "gooning off": "jerking off"
+            "gooning off": "jerking off",
+            "im dead": "im laughing hard",
+            "i cant even": "im overwhelmed"
         };
 
         function translateText() {
             const inputText = document.getElementById('input-text').value;
-            let outputText = inputText;
+            let workingText = inputText;
 
             for (const [phrase, translation] of Object.entries(specialCases)) {
-                const regex = new RegExp('\\b' + phrase + '\\b', 'gi');
-                outputText = outputText.replace(regex, function (match) {
-                    return matchCase(match, translation);
+                const pattern = phrase.replace(/([a-zA-Z])([a-zA-Z])/g, '$1[\'\\-]*$2')
+                                      .replace(/\s+/g, '\\s+');
+                const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
+                
+                workingText = workingText.replace(regex, function(match) {
+                    return transferSymbols(match, translation);
                 });
             }
 
-            for (const [word, translation] of Object.entries(translations)) {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                outputText = outputText.replace(regex, function (match) {
-                    return matchCase(match, translation);
-                });
+            const words = [];
+            let currentWord = '';
+            let inWord = false;
+            
+            for (let i = 0; i < workingText.length; i++) {
+                const char = workingText[i];
+                const isWordChar = /[a-zA-Z0-9'\-]/.test(char);
+                
+                if (isWordChar) {
+                    if (!inWord) {
+                        inWord = true;
+                        currentWord = char;
+                    } else {
+                        currentWord += char;
+                    }
+                } else {
+                    if (inWord) {
+                        words.push({ type: 'word', text: currentWord });
+                        inWord = false;
+                        currentWord = '';
+                    }
+                    words.push({ type: 'other', text: char });
+                }
             }
-
+            
+            if (inWord) {
+                words.push({ type: 'word', text: currentWord });
+            }
+            
+            for (let i = 0; i < words.length; i++) {
+                const token = words[i];
+                
+                if (token.type === 'word') {
+                    const normalizedWord = token.text.replace(/['\-]/g, '').toLowerCase();
+                    
+                    if (translations.hasOwnProperty(normalizedWord)) {
+                        if (noSymbolTransferWords.includes(normalizedWord)) {
+                            token.text = translations[normalizedWord];
+                        } else {
+                            token.text = transferSymbols(token.text, translations[normalizedWord]);
+                        }
+                        token.text = matchCase(token.text, token.text);
+                    }
+                }
+            }
+            
+            const outputText = words.map(token => token.text).join('');
             document.getElementById('output-text').value = outputText;
+        }
+
+        function transferSymbols(source, target) {
+            const normalizedSource = source.replace(/['\-]/g, '');
+            let result = target;
+            
+            const symbols = [];
+            for (let i = 0; i < source.length; i++) {
+                if (source[i] === "'" || source[i] === "-") {
+                    symbols.push({
+                        position: i,
+                        symbol: source[i]
+                    });
+                }
+            }
+            
+            symbols.sort((a, b) => b.position - a.position);
+            
+            for (const symbolInfo of symbols) {
+                const sourceLength = source.length;
+                const targetLength = result.length;
+                const pos = symbolInfo.position;
+                const symbol = symbolInfo.symbol;
+                
+                if (pos === 0) {
+                    result = symbol + result;
+                    continue;
+                } else if (pos === sourceLength - 1) {
+                    result = result + symbol;
+                    continue;
+                }
+                
+                const hasMiddle = sourceLength % 2 !== 0;
+                const middlePos = Math.floor(sourceLength / 2);
+                
+                let insertPos;
+                if (hasMiddle && pos === middlePos) {
+                    insertPos = Math.floor(targetLength / 2);
+                } else if (pos < middlePos) {
+                    insertPos = pos;
+                } else {
+                    const posFromEnd = sourceLength - pos - 1;
+                    insertPos = targetLength - posFromEnd;
+                }
+                
+                insertPos = Math.min(insertPos, targetLength);
+                
+                result = result.slice(0, insertPos) + symbol + result.slice(insertPos);
+            }
+            
+            return result;
         }
 
         function matchCase(original, replacement) {
@@ -318,26 +413,7 @@
                 return replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
             }
 
-            if (original.slice(0, -1) === original.slice(0, -1).toLowerCase() && original[original.length - 1] === original[original.length - 1].toUpperCase()) {
-                return replacement.slice(0, -1).toLowerCase() + replacement.charAt(replacement.length - 1).toUpperCase();
-            }
-
-            if (original.includes(' ') && replacement.includes(' ')) {
-                return matchCaseMultiWord(original, replacement);
-            }
-
             return replacement;
-        }
-
-        function matchCaseMultiWord(original, replacement) {
-            const originalWords = original.split(' ');
-            const replacementWords = replacement.split(' ');
-
-            for (let i = 0; i < Math.min(originalWords.length, replacementWords.length); i++) {
-                replacementWords[i] = matchCase(originalWords[i], replacementWords[i]);
-            }
-
-            return replacementWords.join(' ');
         }
 
         function copyText(elementId) {
